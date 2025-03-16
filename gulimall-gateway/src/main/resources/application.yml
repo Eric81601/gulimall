@@ -1,0 +1,12 @@
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: google_route
+          uri: http://www.google.com
+          predicates:
+            - Query=url,google
+        - id: youtube_route
+          uri: http://www.youtube.com
+          predicates:
+            - Query=url,youtube
