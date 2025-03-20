@@ -2,11 +2,16 @@ spring:
   cloud:
     gateway:
       routes:
-        - id: google_route
-          uri: http://www.google.com
+        - id: product_route
+          uri: lb://gulimall-product
           predicates:
-            - Query=url,google
-        - id: youtube_route
-          uri: http://www.youtube.com
+            - Path=/api/product/**
+          filters:
+            - RewritePath=/api/(?<segment>.*), /$\{segment}
+
+        - id: admin_route
+          uri: lb://renren-fast
           predicates:
-            - Query=url,youtube
+            - Path=/api/**
+          filters:
+            - RewritePath=/api/(?<segment>.*), /renren-fast/$\{segment}
