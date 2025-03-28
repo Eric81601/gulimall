@@ -21,7 +21,7 @@ public class GulimallExceptionControllerAdvice {
 
         BindingResult bindingResult = e.getBindingResult();
         Map<String, String> errorMap = new HashMap<>();
-        bindingResult.getFieldErrors().forEach((fieldError) -> errorMap.put(fieldError.getField(), fieldError.getDefaultMessage()));
+        bindingResult.getFieldErrors().forEach(fieldError -> errorMap.put(fieldError.getField(), fieldError.getDefaultMessage()));
         return R.error(BizCodeEnum.VALID_EXCEPTION.getCode(), BizCodeEnum.VALID_EXCEPTION.getMsg()).put("data", errorMap);
     }
 
