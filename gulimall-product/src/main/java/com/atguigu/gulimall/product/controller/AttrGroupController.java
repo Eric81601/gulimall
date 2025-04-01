@@ -18,8 +18,6 @@ import com.atguigu.gulimall.product.service.AttrGroupService;
 import com.atguigu.common.utils.PageUtils;
 import com.atguigu.common.utils.R;
 
-import javax.ws.rs.Path;
-
 
 /**
  * 属性分组
