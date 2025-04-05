@@ -23,7 +23,7 @@ mybatis-plus:
       id-type: auto
 
 server:
-  port: 7070
+  port: 8090
 
 logging:
   level:
