@@ -16,6 +16,17 @@ spring:
         endpoint: oss-us-east-1.aliyuncs.com
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
+  thymeleaf:
+    cache: true
+  redis:
+    host: 192.168.56.10
+    port: 6379
+  cache:
+    type: redis
+    redis:
+      time-to-live: 3600000
+      use-key-prefix: true
+      cache-null-values: true
 
 mybatis-plus:
   mapper-locations: classpath:/mapper/**/*.xml
@@ -30,4 +41,4 @@ server:
 
 logging:
   level:
-    com.atguigu.gulimall: debug
+    com.atguigu.gulimall: error
