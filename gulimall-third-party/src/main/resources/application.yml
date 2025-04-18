@@ -9,6 +9,11 @@ spring:
       oss:
         endpoint: oss-us-east-1.aliyuncs.com
         bucket: gulimall-ericliu
-
+      sms:
+        appcode: b0563c23aff8428c97a54d4f7f9e28e5
+        path: /sms/
+        skin: 1
+        sign: 175622
+        host: https://fesms.market.alicloudapi.com
 server:
   port: 8082
