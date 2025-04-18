@@ -3,6 +3,7 @@ package com.atguigu.gulimall.product.service.impl;
 import com.atguigu.gulimall.product.entity.AttrEntity;
 import com.atguigu.gulimall.product.service.AttrService;
 import com.atguigu.gulimall.product.vo.AttrGroupWithAttrsVo;
+import com.atguigu.gulimall.product.vo.skuItemVo.SpuItemAttrGroupVo;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,6 +57,7 @@ public class AttrGroupServiceImpl extends ServiceImpl<AttrGroupDao, AttrGroupEnt
 
     /**
      * 根据分类id查出所有的分组以及这些组里面的属性
+     *
      * @param catelogId
      * @return
      */
@@ -73,4 +75,13 @@ public class AttrGroupServiceImpl extends ServiceImpl<AttrGroupDao, AttrGroupEnt
             return attrsVo;
         }).collect(Collectors.toList());
     }
+
+    @Override
+    public List<SpuItemAttrGroupVo> getAttrGroupWithAttrsBySpuId(Long spuId, Long catalogId) {
+        //1.查出当前spu对应的所有属性分组信息以及当前分组下所有属性对应的值
+        //1.1当前spu有多少属性分组
+        AttrGroupDao baseMapper = this.getBaseMapper();
+        return baseMapper.getAttrGroupWithAttrsBySpuId(spuId, catalogId);
+    }
+
 }
