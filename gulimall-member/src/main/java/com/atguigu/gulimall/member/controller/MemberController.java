@@ -7,7 +7,9 @@ import com.atguigu.common.exception.BizCodeEnum;
 import com.atguigu.gulimall.member.exception.PhoneExistException;
 import com.atguigu.gulimall.member.exception.UserNameExistException;
 import com.atguigu.gulimall.member.feign.CouponFeignService;
+import com.atguigu.gulimall.member.vo.MemberLoginVo;
 import com.atguigu.gulimall.member.vo.MemberRegisterVo;
+import com.atguigu.gulimall.member.vo.SocialUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,7 +17,6 @@ import com.atguigu.gulimall.member.entity.MemberEntity;
 import com.atguigu.gulimall.member.service.MemberService;
 import com.atguigu.common.utils.PageUtils;
 import com.atguigu.common.utils.R;
-
 
 
 /**
@@ -47,7 +48,7 @@ public class MemberController {
      */
     @RequestMapping("/list")
     //@RequiresPermissions("member:member:list")
-    public R list(@RequestParam Map<String, Object> params){
+    public R list(@RequestParam Map<String, Object> params) {
         PageUtils page = memberService.queryPage(params);
 
         return R.ok().put("page", page);
@@ -59,8 +60,8 @@ public class MemberController {
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("member:member:info")
-    public R info(@PathVariable("id") Long id){
-		MemberEntity member = memberService.getById(id);
+    public R info(@PathVariable("id") Long id) {
+        MemberEntity member = memberService.getById(id);
 
         return R.ok().put("member", member);
     }
@@ -70,8 +71,8 @@ public class MemberController {
      */
     @RequestMapping("/save")
     //@RequiresPermissions("member:member:save")
-    public R save(@RequestBody MemberEntity member){
-		memberService.save(member);
+    public R save(@RequestBody MemberEntity member) {
+        memberService.save(member);
 
         return R.ok();
     }
@@ -81,8 +82,8 @@ public class MemberController {
      */
     @RequestMapping("/update")
     //@RequiresPermissions("member:member:update")
-    public R update(@RequestBody MemberEntity member){
-		memberService.updateById(member);
+    public R update(@RequestBody MemberEntity member) {
+        memberService.updateById(member);
 
         return R.ok();
     }
@@ -92,8 +93,8 @@ public class MemberController {
      */
     @RequestMapping("/delete")
     //@RequiresPermissions("member:member:delete")
-    public R delete(@RequestBody Long[] ids){
-		memberService.removeByIds(Arrays.asList(ids));
+    public R delete(@RequestBody Long[] ids) {
+        memberService.removeByIds(Arrays.asList(ids));
 
         return R.ok();
     }
@@ -109,4 +110,25 @@ public class MemberController {
         }
         return R.ok();
     }
+
+    @PostMapping("/login")
+    public R login(@RequestBody MemberLoginVo vo) {
+        MemberEntity memberEntity = memberService.login(vo);
+        if (memberEntity != null) {
+            return R.ok().setData(memberEntity);
+        } else {
+            return R.error(BizCodeEnum.LOGIN_ACCT_PASSWORD_INVAILD_EXCEPTION.getCode(), BizCodeEnum.LOGIN_ACCT_PASSWORD_INVAILD_EXCEPTION.getMsg());
+        }
+    }
+
+    @PostMapping("/oauth2/login")
+    public R SocialLogin(@RequestBody SocialUser vo) {
+        MemberEntity memberEntity = memberService.socialLogin(vo);
+        if (memberEntity != null) {
+            return R.ok().setData(memberEntity);
+        } else {
+            return R.error(BizCodeEnum.LOGIN_ACCT_PASSWORD_INVAILD_EXCEPTION.getCode(), BizCodeEnum.LOGIN_ACCT_PASSWORD_INVAILD_EXCEPTION.getMsg());
+        }
+    }
+
 }

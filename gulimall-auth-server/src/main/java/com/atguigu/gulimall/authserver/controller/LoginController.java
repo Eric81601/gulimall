@@ -4,8 +4,10 @@ import com.alibaba.fastjson.TypeReference;
 import com.atguigu.common.constant.AuthServerConstant;
 import com.atguigu.common.exception.BizCodeEnum;
 import com.atguigu.common.utils.R;
+import com.atguigu.common.vo.MemberResponseVo;
 import com.atguigu.gulimall.authserver.feign.MemberFeignService;
 import com.atguigu.gulimall.authserver.feign.ThirdPartyFeignService;
+import com.atguigu.gulimall.authserver.vo.UserLoginVo;
 import com.atguigu.gulimall.authserver.vo.UserRegisterVo;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,12 +18,15 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import static com.atguigu.common.constant.AuthServerConstant.LOGIN_USER;
 
 @Controller
 public class LoginController {
@@ -99,7 +104,7 @@ public class LoginController {
                 } else {
                     //失败
                     Map<String, String> errors = new HashMap<>();
-                    errors.put("msg", register.getData(new TypeReference<String>(){}));
+                    errors.put("msg", register.getData2("msg", new TypeReference<String>() {}));
                     attributes.addFlashAttribute("errors", errors);
                     return "redirect:http://auth.gulimall.com/reg.html";
                 }
@@ -119,37 +124,34 @@ public class LoginController {
         }
     }
 
-//    @GetMapping(value = "/login.html")
-//    public String loginPage(HttpSession session) {
-//
-//        //从session先取出来用户的信息，判断用户是否已经登录过了
-//        Object attribute = session.getAttribute(LOGIN_USER);
-//        //如果用户没登录那就跳转到登录页面
-//        if (attribute == null) {
-//            return "login";
-//        } else {
-//            return "redirect:http://gulimall.com";
-//        }
-//    }
-//
-//
-//    @PostMapping(value = "/login")
-//    public String login(UserLoginVo vo, RedirectAttributes attributes, HttpSession session) {
-//
-//        //远程登录
-//        R login = memberFeignService.login(vo);
-//
-//        if (login.getCode() == 0) {
-//            MemberResponseVo data = login.getData("data", new TypeReference<MemberResponseVo>() {
-//            });
-//            session.setAttribute(LOGIN_USER, data);
-//            return "redirect:http://gulimall.com";
-//        } else {
-//            Map<String, String> errors = new HashMap<>();
-//            errors.put("msg", login.getData("msg", new TypeReference<String>() {
-//            }));
-//            attributes.addFlashAttribute("errors", errors);
-//            return "redirect:http://auth.gulimall.com/login.html";
-//        }
-//    }
+    @GetMapping(value = "/login.html")
+    public String loginPage(HttpSession session) {
+        //从session先取出来用户的信息，判断用户是否已经登录过了
+        Object attribute = session.getAttribute(LOGIN_USER);
+        //如果用户没登录那就跳转到登录页面
+        if (attribute == null) {
+            return "login";
+        } else {
+            return "redirect:http://gulimall.com";
+        }
+    }
+
+
+    @PostMapping(value = "/login")
+    public String login(UserLoginVo vo, RedirectAttributes attributes, HttpSession session) {
+
+        //远程登录
+        R login = memberFeignService.login(vo);
+
+        if (login.getCode() == 0) {
+            MemberResponseVo data = login.getData2("data", new TypeReference<MemberResponseVo>(){});
+            session.setAttribute(LOGIN_USER, data);
+            return "redirect:http://gulimall.com";
+        } else {
+            Map<String, String> errors = new HashMap<>();
+            errors.put("msg", login.getData2("msg", new TypeReference<String>(){}));
+            attributes.addFlashAttribute("errors", errors);
+            return "redirect:http://auth.gulimall.com/login.html";
+        }
+    }
 }

@@ -31,7 +31,7 @@ public class IndexController {
      *
      * @return
      */
-    @GetMapping(value = "/index/catalog.json")
+    @GetMapping(value = "/index/json/catalog.json")
     @ResponseBody
     public Map<String, List<Catalogs2Vo>> getCatalogJson() {
         return categoryService.getCatalogJson();
