@@ -3,6 +3,7 @@ package com.atguigu.gulimall.product.service.impl;
 import com.atguigu.gulimall.product.vo.skuItemVo.SkuItemSaleAttrsVo;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -34,6 +35,11 @@ public class SkuSaleAttrValueServiceImpl extends ServiceImpl<SkuSaleAttrValueDao
     public List<SkuItemSaleAttrsVo> getSaleAttrsBySpuId(Long spuId) {
         SkuSaleAttrValueDao dao = this.baseMapper;
         return dao.getSaleAttrsBySpuId(spuId);
+    }
+
+    @Override
+    public List<String> getSkuSaleAttrValuesAsStringList(Long skuId) {
+        return this.baseMapper.getSkuSaleAttrValuesAsStringList(skuId);
     }
 
 }
