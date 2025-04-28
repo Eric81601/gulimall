@@ -1,5 +1,7 @@
 package com.atguigu.common.exception;
 
+import lombok.Getter;
+
 /***
  * 错误码和错误信息定义类
  * 1. 错误码定义规则为5为数字
@@ -13,6 +15,7 @@ package com.atguigu.common.exception;
  *  13: 购物车
  *  14: 物流
  */
+@Getter
 public enum BizCodeEnum {
     UNKNOWN_EXCEPTION(10000, "系统未知异常"),
     VALID_EXCEPTION(10001, "参数格式校验失败"),
@@ -20,7 +23,8 @@ public enum BizCodeEnum {
     PRODUCT_UP_EXCEPTION(11000, "商品上架异常"),
     USER_EXIST_EXCEPTION(15001, "用户名已存在"),
     PHONE_EXIST_EXCEPTION(15002, "手机号已存在"),
-    LOGIN_ACCT_PASSWORD_INVAILD_EXCEPTION(15003, "用户名或密码错误"),;
+    LOGIN_ACCT_PASSWORD_INVAILD_EXCEPTION(15003, "用户名或密码错误"),
+    NO_STOCK_EXCEPTION(21000, "商品库存不足");
 
     private final int code;
     private final String msg;
@@ -28,13 +32,5 @@ public enum BizCodeEnum {
     BizCodeEnum(int code, String msg) {
         this.code = code;
         this.msg = msg;
-    }
-
-    public int getCode() {
-        return code;
-    }
-
-    public String getMsg() {
-        return msg;
     }
 }
