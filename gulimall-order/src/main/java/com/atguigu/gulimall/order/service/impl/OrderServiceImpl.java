@@ -2,6 +2,7 @@ package com.atguigu.gulimall.order.service.impl;
 
 import com.alibaba.fastjson.TypeReference;
 import com.atguigu.common.exception.NoStockException;
+import com.atguigu.common.to.mq.OrderTo;
 import com.atguigu.common.utils.R;
 import com.atguigu.common.vo.MemberResponseVo;
 import com.atguigu.gulimall.order.constant.OrderConstant;
@@ -18,6 +19,7 @@ import com.atguigu.gulimall.order.service.PaymentInfoService;
 import com.atguigu.gulimall.order.to.OrderCreateTo;
 import com.atguigu.gulimall.order.vo.*;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -25,6 +27,7 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -71,8 +74,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     @Autowired
     StringRedisTemplate redisTemplate;
 
-//    @Autowired
-//    RabbitTemplate rabbitTemplate;
+    @Autowired
+    RabbitTemplate rabbitTemplate;
 
     @Autowired
     ThreadPoolExecutor executor;
@@ -169,7 +172,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         if (result == 0) {
             //失败
             responseVo.setCode(1);
-            return responseVo;
         } else {
             //成功
             //1.创建订单
@@ -199,18 +201,22 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
                 if (r.getCode() == 0) {
                     //成功(rabbitMQ消息通知)
                     responseVo.setOrder(order.getOrder());
-//                    rabbitTemplate.convertAndSend("order-event-exchange", "order.create.order", order.getOrder());
+                    rabbitTemplate.convertAndSend("order-event-exchange", "order.create.order", order.getOrder());
                 } else {
                     //锁定失败
                     String msg = (String) r.get("msg");
                     throw new NoStockException(msg);
                 }
-                return responseVo;
             } else {
                 responseVo.setCode(2);
-                return responseVo;
             }
         }
+        return responseVo;
+    }
+
+    @Override
+    public OrderEntity getOrderByOrderSn(String orderSn) {
+        return this.getOne(new QueryWrapper<OrderEntity>().eq("order_sn", orderSn));
     }
 
     /**
@@ -359,12 +365,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         orderEntity.setIntegration(integration);
     }
 
-//    @Override
-//    public OrderEntity getOrderByOrderSn(String orderSn) {
-//        OrderEntity entity = this.getOne(new QueryWrapper<OrderEntity>().eq("order_sn", orderSn));
-//        return entity;
-//    }
-
     /**
      * 保存订单
      *
@@ -377,95 +377,95 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         List<OrderItemEntity> orderItems = order.getItems();
         orderItemService.saveBatch(orderItems);
     }
-//
-//    /**
-//     * 关闭订单
-//     *
-//     * @param entity
-//     */
-//    @Override
-//    public void closeOrder(OrderEntity entity) {
-//        //查询订单最新状态
-//        OrderEntity orderEntity = this.getById(entity.getId());
-//        if (orderEntity.getStatus() == OrderStatusEnum.CREATE_NEW.getCode()) {
-//            //关闭订单
-//            OrderEntity update = new OrderEntity();
-//            update.setId(entity.getId());
-//            update.setStatus(OrderStatusEnum.CANCLED.getCode());
-//            this.updateById(update);
-//            OrderTo orderTo = new OrderTo();
-//            BeanUtils.copyProperties(orderEntity, orderTo);
-//            try {
-//                //每一条消息进行日志记录(数据库保存每一条消息的详细信息)
-//                //定期扫描数据库将失败的消息再发送一遍
-//                rabbitTemplate.convertAndSend("order-event-exchange", "order.release.other", orderTo);
-//            } catch (Exception e) {
-//                //将没法送成功的消息进行重试发送
-//            }
-//        }
-//    }
-//
-//    /**
-//     * 获取订单的支付信息
-//     *
-//     * @param orderSn
-//     * @return
-//     */
-//    @Override
-//    public PayVo getOrderPay(String orderSn) {
-//        PayVo payVo = new PayVo();
-//        OrderEntity order = this.getOrderByOrderSn(orderSn);
-//        List<OrderItemEntity> list = orderItemService.list(new QueryWrapper<OrderItemEntity>().eq("order_sn", orderSn));
-//        payVo.setOut_trade_no(order.getOrderSn());
-//        //支付宝仅支持小数点后两位,截取位数并向上取值
-//        BigDecimal bigDecimal = order.getPayAmount().setScale(2, BigDecimal.ROUND_UP);
-//        payVo.setTotal_amount(bigDecimal.toString());
-//        OrderItemEntity entity = list.get(0);
-//        payVo.setSubject(entity.getSkuName());
-//        payVo.setBody(entity.getSkuAttrsVals());
-//        return payVo;
-//    }
-//
-//    //订单分页查询
-//    @Override
-//    public PageUtils queryPageWithItem(Map<String, Object> params) {
-//        MemberResponseVo memberRespVo = LoginUserInterceptor.loginUser.get();
-//        IPage<OrderEntity> page = this.page(
-//                new Query<OrderEntity>().getPage(params),
-//                new QueryWrapper<OrderEntity>().eq("member_id", memberRespVo.getId()).orderByDesc("id")
-//        );
-//        List<OrderEntity> order_sn = page.getRecords().stream().map(order -> {
-//            List<OrderItemEntity> list = orderItemService.list(new QueryWrapper<OrderItemEntity>().eq("order_sn", order.getOrderSn()));
-//            order.setItemEntities(list);
-//            return order;
-//        }).collect(Collectors.toList());
-//        page.setRecords(order_sn);
-//        return new PageUtils(page);
-//    }
-//
-//    /**
-//     * 处理支付宝异步通知返回结果
-//     *
-//     * @param vo
-//     * @return
-//     */
-//    @Override
-//    public String handlePayResult(PayAsyncVo vo) {
-//        //1.保存交易流水
-//        PaymentInfoEntity infoEntity = new PaymentInfoEntity();
-//        infoEntity.setAlipayTradeNo(vo.getTrade_no());
-//        infoEntity.setOrderSn(vo.getOut_trade_no());
-//        infoEntity.setPaymentStatus(vo.getTrade_status());
-//        infoEntity.setCallbackTime(vo.getNotify_time());
-//        paymentInfoService.save(infoEntity);
-//        //2.修改订单状态
-//        if (vo.getTrade_status().equals("TRADE_SUCCESS") || vo.getTrade_status().equals("TRADE_FINISHED")) {
-//            //支付成功
-//            String outTradeNo = vo.getOut_trade_no();
-//            this.baseMapper.updateOrderStatus(outTradeNo, OrderStatusEnum.PAYED.getCode());
-//        }
-//        return "success";
-//    }
+
+    /**
+     * 关闭订单
+     *
+     * @param entity
+     */
+    @Override
+    public void closeOrder(OrderEntity entity) {
+        //查询订单最新状态
+        OrderEntity orderEntity = this.getById(entity.getId());
+        if (Objects.equals(orderEntity.getStatus(), OrderStatusEnum.CREATE_NEW.getCode())) {
+            //关闭订单
+            OrderEntity update = new OrderEntity();
+            update.setId(entity.getId());
+            update.setStatus(OrderStatusEnum.CANCELED.getCode());
+            this.updateById(update);
+            OrderTo orderTo = new OrderTo();
+            BeanUtils.copyProperties(orderEntity, orderTo);
+            try {
+                //每一条消息进行日志记录(数 据库保存每一条消息的详细信息)
+                //定期扫描数据库将失败的消息再发送一遍
+                rabbitTemplate.convertAndSend("order-event-exchange", "order.release.other", orderTo);
+            } catch (Exception e) {
+                //将没法送成功的消息进行重试发送
+            }
+        }
+    }
+
+    /**
+     * 获取订单的支付信息
+     *
+     * @param orderSn
+     * @return
+     */
+    @Override
+    public PayVo getOrderPay(String orderSn) {
+        PayVo payVo = new PayVo();
+        OrderEntity order = this.getOrderByOrderSn(orderSn);
+        payVo.setOut_trade_no(order.getOrderSn());
+        //支付宝仅支持小数点后两位,截取位数并向上取值
+        BigDecimal bigDecimal = order.getPayAmount().setScale(2, RoundingMode.UP);
+        payVo.setTotal_amount(bigDecimal.toString());
+        List<OrderItemEntity> list = orderItemService.list(new QueryWrapper<OrderItemEntity>().eq("order_sn", orderSn));
+        OrderItemEntity entity = list.get(0);
+        payVo.setSubject(entity.getSkuName());
+        payVo.setBody(entity.getSkuAttrsVals());
+        return payVo;
+    }
+
+    //订单分页查询
+    @Override
+    public PageUtils queryPageWithItem(Map<String, Object> params) {
+        MemberResponseVo memberRespVo = LoginUserInterceptor.loginUser.get();
+        IPage<OrderEntity> page = this.page(
+                new Query<OrderEntity>().getPage(params),
+                new QueryWrapper<OrderEntity>().eq("member_id", memberRespVo.getId()).orderByDesc("id")
+        );
+        List<OrderEntity> order_sn = page.getRecords().stream().map(order -> {
+            List<OrderItemEntity> list = orderItemService.list(new QueryWrapper<OrderItemEntity>().eq("order_sn", order.getOrderSn()));
+            order.setItemEntities(list);
+            return order;
+        }).collect(Collectors.toList());
+        page.setRecords(order_sn);
+        return new PageUtils(page);
+    }
+
+    /**
+     * 处理支付宝异步通知返回结果
+     *
+     * @param vo
+     * @return
+     */
+    @Override
+    public String handlePayResult(PayAsyncVo vo) {
+        //1.保存交易流水
+        PaymentInfoEntity infoEntity = new PaymentInfoEntity();
+        infoEntity.setAlipayTradeNo(vo.getTrade_no());
+        infoEntity.setOrderSn(vo.getOut_trade_no());
+        infoEntity.setPaymentStatus(vo.getTrade_status());
+        infoEntity.setCallbackTime(vo.getNotify_time());
+        paymentInfoService.save(infoEntity);
+        //2.修改订单状态
+        if (vo.getTrade_status().equals("TRADE_SUCCESS") || vo.getTrade_status().equals("TRADE_FINISHED")) {
+            //支付成功
+            String outTradeNo = vo.getOut_trade_no();
+            this.baseMapper.updateOrderStatus(outTradeNo, OrderStatusEnum.PAYED.getCode());
+        }
+        return "success";
+    }
 //
 //    /**
 //     * 创建秒杀订单
