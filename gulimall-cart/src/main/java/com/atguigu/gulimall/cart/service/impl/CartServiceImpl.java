@@ -50,7 +50,7 @@ public class CartServiceImpl implements CartService {
             //远程查询当前要添加的商品信息
             CompletableFuture<Void> getSkuInfoTask = CompletableFuture.runAsync(() -> {
                 R skuInfo = productFeignService.getSkuInfo(skuId);
-                SkuInfoVo data = skuInfo.getData2("skuInfo", new TypeReference<SkuInfoVo>() {
+                SkuInfoVo data = skuInfo.getData("skuInfo", new TypeReference<SkuInfoVo>() {
                 });
                 cartItem.setCheck(true);
                 cartItem.setCount(num);

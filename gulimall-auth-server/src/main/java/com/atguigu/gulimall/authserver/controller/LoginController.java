@@ -104,7 +104,7 @@ public class LoginController {
                 } else {
                     //失败
                     Map<String, String> errors = new HashMap<>();
-                    errors.put("msg", register.getData2("msg", new TypeReference<String>() {}));
+                    errors.put("msg", register.getData("msg", new TypeReference<String>() {}));
                     attributes.addFlashAttribute("errors", errors);
                     return "redirect:http://auth.gulimall.com/reg.html";
                 }
@@ -144,12 +144,12 @@ public class LoginController {
         R login = memberFeignService.login(vo);
 
         if (login.getCode() == 0) {
-            MemberResponseVo data = login.getData2("data", new TypeReference<MemberResponseVo>(){});
+            MemberResponseVo data = login.getData("data", new TypeReference<MemberResponseVo>(){});
             session.setAttribute(LOGIN_USER, data);
             return "redirect:http://gulimall.com";
         } else {
             Map<String, String> errors = new HashMap<>();
-            errors.put("msg", login.getData2("msg", new TypeReference<String>(){}));
+            errors.put("msg", login.getData("msg", new TypeReference<String>(){}));
             attributes.addFlashAttribute("errors", errors);
             return "redirect:http://auth.gulimall.com/login.html";
         }

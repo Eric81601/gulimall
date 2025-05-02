@@ -3,6 +3,7 @@ package com.atguigu.gulimall.order.service.impl;
 import com.alibaba.fastjson.TypeReference;
 import com.atguigu.common.exception.NoStockException;
 import com.atguigu.common.to.mq.OrderTo;
+import com.atguigu.common.to.mq.SeckillOrderTo;
 import com.atguigu.common.utils.R;
 import com.atguigu.common.vo.MemberResponseVo;
 import com.atguigu.gulimall.order.constant.OrderConstant;
@@ -85,10 +86,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
-        IPage<OrderEntity> page = this.page(
-                new Query<OrderEntity>().getPage(params),
-                new QueryWrapper<>()
-        );
+        IPage<OrderEntity> page = this.page(new Query<OrderEntity>().getPage(params), new QueryWrapper<>());
 
         return new PageUtils(page);
     }
@@ -166,8 +164,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         String orderToken = vo.getOrderToken();
         //使用Lua脚本
         //Lua脚本里使用的是长度为1的List，所以需要asList
-        Long result = redisTemplate.execute(new DefaultRedisScript<>(script, Long.class),
-                Collections.singletonList(OrderConstant.USER_ORDER_TOKEN_PREFIX + memberRespVo.getId()), orderToken);
+        Long result = redisTemplate.execute(new DefaultRedisScript<>(script, Long.class), Collections.singletonList(OrderConstant.USER_ORDER_TOKEN_PREFIX + memberRespVo.getId()), orderToken);
         //String s = redisTemplate.opsForValue().get(OrderConstant.USER_ORDER_TOKEN_PREFIX + memberRespVo.getId());
         if (result == 0) {
             //失败
@@ -430,10 +427,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     @Override
     public PageUtils queryPageWithItem(Map<String, Object> params) {
         MemberResponseVo memberRespVo = LoginUserInterceptor.loginUser.get();
-        IPage<OrderEntity> page = this.page(
-                new Query<OrderEntity>().getPage(params),
-                new QueryWrapper<OrderEntity>().eq("member_id", memberRespVo.getId()).orderByDesc("id")
-        );
+        IPage<OrderEntity> page = this.page(new Query<OrderEntity>().getPage(params), new QueryWrapper<OrderEntity>().eq("member_id", memberRespVo.getId()).orderByDesc("id"));
         List<OrderEntity> order_sn = page.getRecords().stream().map(order -> {
             List<OrderItemEntity> list = orderItemService.list(new QueryWrapper<OrderItemEntity>().eq("order_sn", order.getOrderSn()));
             order.setItemEntities(list);
@@ -466,27 +460,26 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         }
         return "success";
     }
-//
-//    /**
-//     * 创建秒杀订单
-//     *
-//     * @param seckillOrder
-//     */
-//    @Override
-//    public void createSeckillOrder(SeckillOrderTo seckillOrder) {
-//        OrderEntity orderEntity = new OrderEntity();
-//        orderEntity.setOrderSn(seckillOrder.getOrderSn());
-//        orderEntity.setMemberId(seckillOrder.getMemberId());
-//        orderEntity.setStatus(OrderStatusEnum.CREATE_NEW.getCode());
-//        BigDecimal multiply = seckillOrder.getSeckillPrice().multiply(new BigDecimal("" + seckillOrder.getNum()));
-//        orderEntity.setPayAmount(multiply);
-//        this.save(orderEntity);
-//        //保存订单项信息
-//        OrderItemEntity itemEntity = new OrderItemEntity();
-//        itemEntity.setOrderSn(seckillOrder.getOrderSn());
-//        itemEntity.setRealAmount(multiply);
-//        itemEntity.setSkuQuantity(seckillOrder.getNum());
-//        orderItemService.save(itemEntity);
-//    }
 
+    /**
+     * 创建秒杀订单
+     *
+     * @param seckillOrder
+     */
+    @Override
+    public void createSeckillOrder(SeckillOrderTo seckillOrder) {
+        OrderEntity orderEntity = new OrderEntity();
+        orderEntity.setOrderSn(seckillOrder.getOrderSn());
+        orderEntity.setMemberId(seckillOrder.getMemberId());
+        orderEntity.setStatus(OrderStatusEnum.CREATE_NEW.getCode());
+        BigDecimal multiply = seckillOrder.getSeckillPrice().multiply(new BigDecimal("" + seckillOrder.getNum()));
+        orderEntity.setPayAmount(multiply);
+        this.save(orderEntity);
+        //保存订单项信息
+        OrderItemEntity itemEntity = new OrderItemEntity();
+        itemEntity.setOrderSn(seckillOrder.getOrderSn());
+        itemEntity.setRealAmount(multiply);
+        itemEntity.setSkuQuantity(seckillOrder.getNum());
+        orderItemService.save(itemEntity);
+    }
 }
